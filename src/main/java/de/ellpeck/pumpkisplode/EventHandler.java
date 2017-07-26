@@ -47,7 +47,7 @@ public class EventHandler{
 
                 for(EntityLivingBase entity : entities){
                     if(entity instanceof EntityPlayer){
-                        ItemStack stack = ((EntityPlayer)entity).inventory.armorInventory[3];
+                        ItemStack stack = ((EntityPlayer)entity).inventory.armorInventory.get(3);
                         if(stack != null && stack.getItem() == Item.getItemFromBlock(Blocks.PUMPKIN)){
                             if(isLookingAt(villager, entity)){
                                 explodeVillager(villager);
@@ -85,7 +85,12 @@ public class EventHandler{
 
     private static void explodeVillager(EntityVillager villager){
         Random rand = villager.getRNG();
-        villager.world.createExplosion(null, villager.posX, villager.posY, villager.posZ, rand.nextFloat()*3F+1F, true);
+        float strength = rand.nextFloat()*3F+1F;
+        if (!villager.world.getGameRules().getBoolean("mobGriefing"))
+        {
+          strength = 0;
+        }
+        villager.world.createExplosion(null, villager.posX, villager.posY, villager.posZ, strength, true);
         villager.setDead();
 
         if(rand.nextFloat() >= 0.25F){

@@ -32,6 +32,11 @@ public class EventHandler{
         public boolean apply(Entity input){
             return input.isEntityAlive() && (input instanceof EntityPlayer || input instanceof EntitySnowman);
         }
+        @Override
+        public boolean test(Entity input)
+        {
+          return apply(input);
+        }
     };
 
     @SubscribeEvent

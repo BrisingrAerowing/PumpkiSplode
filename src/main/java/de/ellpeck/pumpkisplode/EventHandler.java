@@ -88,10 +88,11 @@ public class EventHandler {
 	private static void explodeVillager(EntityVillager villager) {
 		Random rand = villager.getRNG();
 		float strength = rand.nextFloat() * 3F + 1F;
-		if (!villager.world.getGameRules().getBoolean("mobGriefing")) {
-			strength = 0;
+		boolean damagesTerrain = true;
+		if (!villager.world.getGameRules().getBoolean("mobGriefing") || !villager.world.getGameRules().getBoolean("pumpkisplodeGriefing")) {
+			damagesTerrain = false;
 		}
-		villager.world.createExplosion(null, villager.posX, villager.posY, villager.posZ, strength, true);
+		villager.world.createExplosion(null, villager.posX, villager.posY, villager.posZ, strength, damagesTerrain);
 		villager.setDead();
 
 		if (rand.nextFloat() >= 0.25F) {

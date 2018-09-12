@@ -25,99 +25,95 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.List;
 import java.util.Random;
 
-public class EventHandler{
+public class EventHandler {
 
-    private static final Predicate<Entity> IS_PLAYER_OR_SNOWMAN = new Predicate<Entity>(){
-        @Override
-        public boolean apply(Entity input){
-            return input.isEntityAlive() && (input instanceof EntityPlayer || input instanceof EntitySnowman);
-        }
-        @Override
-        public boolean test(Entity input)
-        {
-          return apply(input);
-        }
-    };
+	private static final Predicate<Entity> IS_PLAYER_OR_SNOWMAN = new Predicate<Entity>() {
+		@Override
+		public boolean apply(Entity input) {
+			return input.isEntityAlive() && (input instanceof EntityPlayer || input instanceof EntitySnowman);
+		}
 
-    @SubscribeEvent
-    public void onLivingUpdate(LivingEvent.LivingUpdateEvent event){
-        EntityLivingBase eventity = event.getEntityLiving();
-        if(!eventity.world.isRemote && eventity instanceof EntityVillager){
-            EntityVillager villager = (EntityVillager)eventity;
+		@Override
+		public boolean test(Entity input) {
+			return apply(input);
+		}
+	};
 
-            if(!villager.isDead && !villager.isChild()){
-                float range = 3.0F;
-                AxisAlignedBB aabb = new AxisAlignedBB(villager.posX-range, villager.posY-range, villager.posZ-range, villager.posX+range, villager.posY+range, villager.posZ+range);
-                List<EntityLivingBase> entities = villager.world.getEntitiesWithinAABB(EntityLivingBase.class, aabb, IS_PLAYER_OR_SNOWMAN);
+	@SubscribeEvent
+	public void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
+		EntityLivingBase eventity = event.getEntityLiving();
+		if (!eventity.world.isRemote && eventity instanceof EntityVillager) {
+			EntityVillager villager = (EntityVillager) eventity;
 
-                for(EntityLivingBase entity : entities){
-                    if(entity instanceof EntityPlayer){
-                        ItemStack stack = ((EntityPlayer)entity).inventory.armorInventory.get(3);
-                        if(stack != null && stack.getItem() == Item.getItemFromBlock(Blocks.PUMPKIN)){
-                            if(isLookingAt(villager, entity)){
-                                explodeVillager(villager);
-                                return;
-                            }
-                        }
-                    }
-                    else if(entity instanceof EntitySnowman){
-                        if(!((EntitySnowman)entity).isPumpkinEquipped()){ //This is the wrong way around, why >_>
-                            if(isLookingAt(villager, entity)){
-                                explodeVillager(villager);
-                                return;
-                            }
-                        }
-                    }
-                }
+			if (!villager.isDead && !villager.isChild()) {
+				float range = 3.0F;
+				AxisAlignedBB aabb = new AxisAlignedBB(villager.posX - range, villager.posY - range, villager.posZ - range, villager.posX + range, villager.posY + range, villager.posZ + range);
+				List<EntityLivingBase> entities = villager.world.getEntitiesWithinAABB(EntityLivingBase.class, aabb, IS_PLAYER_OR_SNOWMAN);
 
-                RayTraceResult ray = ForgeHooks.rayTraceEyes(villager, 5F);
-                if(ray != null){
-                    BlockPos pos = ray.getBlockPos();
-                    if(pos != null){
-                        IBlockState state = villager.world.getBlockState(pos);
-                        if(state.getBlock() == Blocks.PUMPKIN){
-                            EnumFacing rotation = state.getValue(BlockPumpkin.FACING);
-                            if(rotation == ray.sideHit){
-                                explodeVillager(villager);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+				for (EntityLivingBase entity : entities) {
+					if (entity instanceof EntityPlayer) {
+						ItemStack stack = ((EntityPlayer) entity).inventory.armorInventory.get(3);
+						if (!stack.isEmpty() && stack.getItem() == Item.getItemFromBlock(Blocks.PUMPKIN)) {
+							if (isLookingAt(villager, entity)) {
+								explodeVillager(villager);
+								return;
+							}
+						}
+					} else if (entity instanceof EntitySnowman) {
+						if (!((EntitySnowman) entity).isPumpkinEquipped()) { //This is the wrong way around, why >_>
+							if (isLookingAt(villager, entity)) {
+								explodeVillager(villager);
+								return;
+							}
+						}
+					}
+				}
 
-    }
+				RayTraceResult ray = ForgeHooks.rayTraceEyes(villager, 5F);
+				if (ray != null) {
+					BlockPos pos = ray.getBlockPos();
+					IBlockState state = villager.world.getBlockState(pos);
+					if (state.getBlock() == Blocks.PUMPKIN) {
+						EnumFacing rotation = state.getValue(BlockPumpkin.FACING);
+						if (rotation == ray.sideHit) {
+							explodeVillager(villager);
+						}
+					}
+				}
+			}
+		}
 
-    private static void explodeVillager(EntityVillager villager){
-        Random rand = villager.getRNG();
-        float strength = rand.nextFloat()*3F+1F;
-        if (!villager.world.getGameRules().getBoolean("mobGriefing"))
-        {
-          strength = 0;
-        }
-        villager.world.createExplosion(null, villager.posX, villager.posY, villager.posZ, strength, true);
-        villager.setDead();
+	}
 
-        if(rand.nextFloat() >= 0.25F){
-            villager.entityDropItem(new ItemStack(Items.EMERALD, rand.nextInt(5)+1), 0F);
-        }
+	private static void explodeVillager(EntityVillager villager) {
+		Random rand = villager.getRNG();
+		float strength = rand.nextFloat() * 3F + 1F;
+		if (!villager.world.getGameRules().getBoolean("mobGriefing")) {
+			strength = 0;
+		}
+		villager.world.createExplosion(null, villager.posX, villager.posY, villager.posZ, strength, true);
+		villager.setDead();
 
-        IInventory inv = villager.getVillagerInventory();
-        for(int i = 0; i < inv.getSizeInventory(); i++){
-            ItemStack stack = inv.getStackInSlot(i);
-            if(stack != null){
-                villager.entityDropItem(stack, 0F);
-            }
-        }
-    }
+		if (rand.nextFloat() >= 0.25F) {
+			villager.entityDropItem(new ItemStack(Items.EMERALD, rand.nextInt(5) + 1), 0F);
+		}
 
-    private static boolean isLookingAt(EntityVillager villager, EntityLivingBase other){
-        Vec3d vec3d = villager.getLook(1.0F).normalize();
-        Vec3d vec3d1 = new Vec3d(other.posX-villager.posX, other.posY+(double)other.getEyeHeight()-(villager.posY+(double)villager.getEyeHeight()), other.posZ-villager.posZ);
-        double d0 = vec3d1.lengthVector();
-        vec3d1 = vec3d1.normalize();
-        double d1 = vec3d.dotProduct(vec3d1);
+		IInventory inv = villager.getVillagerInventory();
+		for (int i = 0; i < inv.getSizeInventory(); i++) {
+			ItemStack stack = inv.getStackInSlot(i);
+			if (!stack.isEmpty()) {
+				villager.entityDropItem(stack, 0F);
+			}
+		}
+	}
 
-        return d1 > 1.0D-0.025D/d0 && villager.canEntityBeSeen(other);
-    }
+	private static boolean isLookingAt(EntityVillager villager, EntityLivingBase other) {
+		Vec3d vec3d = villager.getLook(1.0F).normalize();
+		Vec3d vec3d1 = new Vec3d(other.posX - villager.posX, other.posY + (double) other.getEyeHeight() - (villager.posY + (double) villager.getEyeHeight()), other.posZ - villager.posZ);
+		double d0 = vec3d1.lengthVector();
+		vec3d1 = vec3d1.normalize();
+		double d1 = vec3d.dotProduct(vec3d1);
+
+		return d1 > 1.0D - 0.025D / d0 && villager.canEntityBeSeen(other);
+	}
 }
